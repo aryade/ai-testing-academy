@@ -1,4 +1,4 @@
-name: Build and Deploy to GitHub Pages
+name: Build, Test & Deploy to GitHub Pages
 
 on:
   push:
@@ -7,29 +7,35 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  test-build-deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.1.7
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v4.0.2
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
 
     - name: Install dependencies
       run: npm ci
 
+    - name: Run tests
+      run: npm run test:run
+
     - name: Build
       run: npm run build
 
+    - name: Create .nojekyll file
+      run: touch dist/.nojekyll
+
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v4.0.0
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dist
-        cname: ai-testing-academy.local
+        force_orphan: true
